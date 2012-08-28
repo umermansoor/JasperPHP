@@ -1,10 +1,10 @@
-<h2> Login to LiveCams </h2>
+<h2> Please login </h2>
 
 <?php
 // Check if the previous attempt failed
-if (isset($failed))
+if (isset($message))
 {
-	print("<p>Incorrect username or password</p>");
+	print("<h3>$message</h3>");
 }
 
 ?>

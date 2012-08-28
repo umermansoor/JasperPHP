@@ -3,7 +3,7 @@
 	<title><?php print($title) ?> </title>
 </head>
 <body>
-	<h1> Welcome </h1>
+	<h1> Welcome to Acme Corp</h1>
 	
 	
 	

@@ -3,24 +3,14 @@
 // umermk3@gmail.com
 // Created: August 25, 2012
 
-define("DB_SERVER", "localhost");
-define("DB_USER", 	"members");
-define("DB_PASS",   "kilopia454");
-define("DB_NAME",   "members");
+include('../library/BaseModelMySql.php');
 
-define("TBL_LOGIN", "users");
-define("TBL_SERIALS", "serials");
-define("TBL_HARDWARE", "hardware");
-define("TBL_LOG", "logs");
-
-class User
+class User extends BaseModelMySql
 {
-	var $connection;
 	
-	function User()
+	function __construct()
 	{
-		$this->connection = mysql_connect(DB_SERVER, DB_USER, DB_PASS) or die (mysql_error());
-		mysql_select_db(DB_NAME, $this->connection);
+		parent::__construct();
 	}
 
 	/* ------------------------------------------------------------------------
@@ -162,15 +152,6 @@ class User
 	}
 	
 	/* ------------------------------------------------------------------------
-	 * Escapes a string for MySQL
-	 * ------------------------------------------------------------------------
-	 */
-	private function escapeMySql($string)
-	{
-		return mysql_real_escape_string($string);
-	}
-	
-	/* ------------------------------------------------------------------------
 	 * For encrypting a string
 	 * ------------------------------------------------------------------------
 	 */
@@ -181,6 +162,3 @@ class User
 	
 	
 } // User
-
-
-?>

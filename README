@@ -1,0 +1,159 @@
+(last updated: August 26, 2012)
+
+Jasper PHP MVC
+==============
+This is just another PHP Model-View-Controller Framework which I designed for one of the projects I was doing. 
+
+I looked into Zend Framework for PHP but found it too complicated. Even though I like many of its features, I particularly don't like all Bootstrapping to be done via a singular index file, which in my opinion, introduces a lot of overhead and isn't ideal for high traffic projects. I also don't like Zend's complexity. (But that's just me: I also don't like smartphones, sql and hockey).
+
+This framework largely takes the "convention over configuration" approach, however there are a few exceptions:
+- Controllers are not tied to the model of the same name: a controller can tie into any model. This is because I like fat models and light controllers. (Also, I don't like the idea of creating a new model everytime I create a new controller)
+
+Directory Structure
+====================
+config/ 				- Configuration files are stored in this directory
+controllers/			- Controllers are stored here
+	controllers/helpers	- Any helper classes that controllers might need (e.g. SessionStore)
+library/				- Framework specific code
+models/					- Models are stored here
+views/					- Views are stored here
+	views/include		- Helper files for views are stored here
+
+The views folder also has subfolders corresponding to Controller and actions.
+views/
+	views/$CONTROLLER_NAME$/			- Every Controller has it's own folder
+	
+Controllers
+===========
+
+All user interaction is done via Controllers. [There is no global bootstrap file like Zend or Codeigniter]. Each controller is made up of actions (use cases). An action is a function that the user wishes the controller to perform, e.g., log user out. A controller can perform only *one* action at a time.
+
+Actions are passed to the controllers using HTTP GET method where the argument id is 'a'. For example, here's how to invoke logout action on the MemberTools controller:
+
+http://www.example.com/MemberTools?a=logout
+
+Note: Apache's .htaccess file can be easily modified to work with this approach producing pretty URLs like /controller/action
+
+Creating Controllers
+--------------------
+Convention: Names begin with an Uppercase Letter and are plural. For example, the controller for handling user interaction is called "Users". The filename must be the same as the classname
+Parent Class: All controllers must extend the BaseController class (/library/BaseController.php)
+Location: Controllers must be stored in controllers/ directory
+
+Controller Template
+-------------------
+
+A Controller Template is given below. 
+
+--- start code ---
+<?php 
+// Do not put the closing ?>. This is to avoid injecting extra whitespace and follows Zend's coding convention
+
+$modelName = "AModel"; //Name of the model - Edit it if you wish to use a different model
+$controllerName = basename(__FILE__, '.php');
+
+include('../library/BaseController.php');
+include ("../models/$modelName.php");
+include ('../views/Template.php');
+
+class Users extends BaseController
+{
+	function __construct($modelClass, $action)
+	{
+		parent::__construct($modelClass, $action); // Call Parent contruction
+	}
+	
+	protected function anAction()
+	{
+		// A sample action. More on rendering views later.
+		
+	}
+}
+
+include('../library/ControllerBootstrap.php');
+
+--- end code ---
+
+Models
+======
+Model consists of application data. 
+
+Creating Models
+---------------
+Convention: Names begin with an Uppercase Letter and are singular. For example, the model that deals with the user data is called "User".
+Parent Class: All controllers must extend the BaseModel class (/library/BaseModel.php)
+Location: Models must be stored in models/ directory
+
+Model Template
+--------------
+--- start code ---
+<?php
+include('../library/BaseModelMySql.php');
+
+class User extends BaseModelMySql
+{	
+	function __construct()
+	{
+		parent::__construct();
+	}
+	
+	function doSomething($param)
+	{
+		// do something
+		return $someValue;
+	}
+}
+--- end code ---
+
+Views
+=====
+Views are used to render output to users. Views are dumb output devices and no application logic or rules should ever be placed in views.
+
+Interaction with Controllers
+----------------------------
+Ideally, you should create a directory inside views/ corresponding to each controller. For example, if your application has a controller called "Users", you must create a directory called "Users" inside view/. In that directory, you should create (html) pages corresponding to each action (as necessary). These pages can only contain the code composing the body only [See "Default View"]. For example, suppose we have a Users controller which has an action called login which is called to show the login form. In other words, we have:
+
+Controller: Users
+Action: login
+
+Therefore, we must define the following:
+views/Users/login.php [views/$CONTROLLER_NAME$/$ACTION_NAME$]
+
+login.php may be defined as follows:
+--- start code ---
+<h2> This is the login page </h2>
+
+<?php
+// Check if we have messages to display
+if (isset($message))
+{
+	print("<h3>$message</h3>");
+}
+?>
+
+<?php
+$submitUrl = "../controllers/$controller.php";
+?>
+
+<form action = "<?php /* The controller URL */ print($submitUrl);?>" method="get">
+Username: <input type="text" name="username" /> <br />
+Password: <input type="text" name="password">
+<input type="hidden" name="a" value="<?php /* Required action within controller */  print($action);?>">
+<input type="submit" value="Submit" /> 	
+</form>
+
+--- end code ---
+
+Default View Template
+---------------------
+Jasper comes with a default view Template: /views/Template.php. This Template contains code useful for small application. The default template extends from BaseTemplate class and has a function called render() which is called by the Controller when it wishes to render the view to user. The default Template composes the output as follows:
+
+1. header
+2. body
+3. footer
+
+For most applications, the header and footer are the same across all pages. The default header for footer are stored in views/include.
+
+Note: The rendering of views and interaction with controllers is left wide open. The current implementation meets the requirement but for future uses, the default Template can be easily changed to meet other requirements.
+
+

@@ -1,95 +1,43 @@
 <?php
+
+/* Users Controller: All functionality pertaining to user accounts such as creation, validation, etc.
+ *    is contained in this controller. 
+ * Written by: Umer Mansoor <August 25, 2012>
+ */
 include ('../models/User.php');
 include ('../views/Template.php');
+include('./helper/SessionHandler.php');
+include('../library/BaseController.php');
 
-// Extract the action
-$action = $_GET["a"];
-
-$users = new Users($action);
-$users->main();
-
-class Users
+class Users extends BaseController
 {
-	private $_model;
-	private $_viewTemplate;
-	private $_action;
+	private $_session;
 	
-	function Users($action)
+	function __construct($modelClass, $action)
 	{
-		$this->_model = new User;
-		$this->_action = $action;
+		parent::__construct($modelClass, $action);
+		$this->_session = SessionHandler::getInstance();
 	}
 	
-	public function main()
-	{
-		if (strcmp($this->_action, 'login') == 0)
-		{
-			$this->login();
-		}
-		else if (strcmp($this->_action, 'register') == 0)
-		{
-			$this->register();
-		}
-		else if (strcmp($this->_action, 'controlPanel') == 0)
-		{
-			$this->controlPanel();
-		}
-			else if (strcmp($this->_action, 'logout') == 0)
-			{
-				$this->logout();
-			}
-	}
 	
-	private function createUserSession($username, $password)
+	/* ------------------------------------------------------------------------
+	 * Register Action: Performs user registration
+	 * ------------------------------------------------------------------------
+	 */
+	protected function register()
 	{
-		session_start();
-		$_SESSION['username'] = $username;	
-	}
-	
-	private function logout()
-	{
-		session_start();
-		session_unset();
-		session_destroy();
-	}
-	
-	private function checkSession()
-	{
-		session_start();
-		
-		if (isset($_SESSION['username']))
-		{
-			return true;
-		}
-		else
-		{
-			return false;
-		}
-	}
-	
-	private function register()
-	{
-		// Insert a dummy user
 		$username = $_GET['username'];
-		$this->_model->register("$username", "tiger", "Umer", "Mansoor", "4039740000", "Somewhere in Calgary", "google", "00");
+		$this->_model->register("$username", "tiger", "Umer", "Mansoor", "4034004773", "117 Panbamoutn", "Acme", "00");
 	}
+
 	
-	private function controlPanel()
+	/* ------------------------------------------------------------------------
+	 * Login Action
+	 * ------------------------------------------------------------------------
+	 */
+	protected function login()
 	{
-		if ($this->checkSession() == false)
-		{
-			$this->login();
-		}
-		else
-		{
-			$this->_viewTemplate = new Template("Users", "controlPanel");
-			$this->_viewTemplate->set('title', 'Control Panel');
-			$this->_viewTemplate->render();	
-		}
-	}
-	
-	private function login()
-	{
+		
 		$username = $_GET['username'];
 		$password = $_GET['password'];
 
@@ -100,25 +48,33 @@ class Users
 		 */
 		if ($username == NULL && $password == NULL)
 		{
-			$this->_viewTemplate->set('title', 'MVC - Control Panel Login');
+			$this->_viewTemplate->set('title', 'Acme Corp - Login');
 		}
 		else
 		{
 			if ($this->_model->checkCredentials($username, $password))
 			{
-				$this->createUserSession($username, $password);
-				$this->controlPanel(); //Login is successfull. call the control panel
+				$this->_session->login($username);
+				$this->redirectToController('MemberTools', 'members'); //Login is successfull. call the control panel
 				return;
 			}
 			else
 			{
-				$this->_viewTemplate->set('title', 'MVC - Incorrect username or password');
-				$this->_viewTemplate->set('failed', 'true');	
+				$this->_viewTemplate->set('title', 'Acme Corp - Incorrect username or password');
+				$this->_viewTemplate->set('message', 'Incorrect Username or Password!!!');	
 			}
-			
-			
 		}
 		
 		$this->_viewTemplate->render();
-	}
+	}	
 }
+
+/**
+ * The controller is invoked on an action (e.g. login). The action is passed as
+ * a HTTP GET parameter with id = 'a'. We must extract the action before creating
+ * the controller.
+ */
+$action = $_GET["a"]; // Extract the action
+
+$members = new Users("User", $action); //Create the controller
+$members->main(); //Call the main function
